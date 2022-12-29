@@ -11,3 +11,5 @@
 - we can use environment in docker to override or create new env variable not exist.
   - can use env `APP_ENV` to use `.env.{APP_ENV}` file or define each one.
   - env use in react-app MUST have prefix `REACT_APP_`.
+
+- Deploy sample: `https://github.com/hungntsol-free/da2-deploy`
