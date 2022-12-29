@@ -1,17 +1,20 @@
-FROM node:16-alpine as builder
-ARG build_env=dev
-RUN echo ${build_env}
+FROM node:16-alpine as build-stage
 ENV NODE_ENV=production
 WORKDIR /app
-COPY ["package*.json", "./"]
+COPY ["package*.json", "yarn*.lock", "./"]
 RUN npm install --production --silent && mv node_modules ../
 COPY . .
-RUN npm run build:${build_env}
+RUN npm run build --prod
 
-FROM nginx:stable-alpine as publish
-ENV NODE_ENV production
+FROM nginx:stable-alpine as publish-stage
+RUN apk add --no-cache bash
 WORKDIR /usr/share/nginx/html
-COPY ./conf/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/build/ .
+# override nginx conf
+COPY ./docker/conf /etc/nginx/conf.d
+# static build
+COPY --from=build-stage /app/build .
+# use port 3000
 EXPOSE 3000
-CMD ["nginx", "-g", "daemon off;"]
+COPY ["./.env*", "./env.sh", "./"]
+RUN chmod +x ./env.sh
+CMD [ "/bin/bash", "-c", "./env.sh && nginx -g \"daemon off;\"" ]
